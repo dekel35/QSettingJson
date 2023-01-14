@@ -97,7 +97,7 @@ bool TestQSettingsJson::test_case3()
 
 bool TestQSettingsJson::test_case4()
 {
-    QJsonDocument jdoc = QJsonDocument::fromJson("{ \"a\" : [\"1\", \"2\"] }");
+    QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key\" : [\"1\", \"2\"] }");
     QJsonObject jobj = jdoc.object();
     logger(INFO, jdoc.toJson().toStdString().c_str());
     
@@ -105,12 +105,12 @@ bool TestQSettingsJson::test_case4()
     auto jobj2 = importedSettings.exportJson();
     QJsonDocument jdoc2(*jobj2);
     bool equal = compareJson(&jobj, jobj2);
-    return !equal;
+    return !equal; 
 }
 
 void TestQSettingsJson::logger(LogLevel level, const char *format, ...)
 {
-    if (level <= DBG) {
+    if (level <= INFO) {
         return;
     }
 

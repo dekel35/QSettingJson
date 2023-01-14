@@ -14,9 +14,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 COMPONENTS Core REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core REQUIRED)
 
+include_directories(..)
+
 add_executable(TestQSettingsJson
   main.cpp
-  QSettingsJson.cpp
+  ../QSettingsJson.cpp
   TestQSettingsJson.h TestQSettingsJson.cpp
 )
 

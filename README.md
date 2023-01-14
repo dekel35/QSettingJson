@@ -4,7 +4,7 @@ QSettingsJson is a Qt-related class that adds the ability to import and export j
 
 ## Details
 
-The QSettings class inherits from Qt's QSetting class and adds the following abilities:
+The QSettingsJson class inherits from Qt's QSetting class and adds the following abilities:
 
 1. A **constructor** that constructs a QSettingJson from a json text file:
     ```lang c++
