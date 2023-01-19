@@ -61,15 +61,11 @@ void QSettingsJson::importSettingsFromJson(QJsonObject &jObject,
             retSettings->setValue(jkey, subIter.value().toDouble());
         } else if (subIter.value().isArray()) {
             auto array = subIter.value().toArray();
-            QByteArray val = "[ ";
-            QByteArray comma = "";
+            QList<QVariant> list;
             for (auto s : array) {
-                val += comma;
-                comma = ", ";
-                val += s.toString().toLatin1();
+                list.push_back(s.toString().toLatin1());
             }
-            val += "]";
-            retSettings->setValue(jkey, val);
+            retSettings->setValue(jkey, list);
         } else {
             abort();
         }
@@ -90,7 +86,15 @@ QJsonObject QSettingsJson::exportOneKey(QString key, int depth)
     }
     auto keys = childKeys();
     for (auto s : childKeys()) {
-        retObject[s] = value(s).toString();
+        if (value(s).typeId() == QMetaType::QVariantList) {
+            QJsonArray array;
+            for (auto item :value(s).toList()) {
+                array.push_back(item.toString().toStdString().c_str());
+            }
+            retObject[s] = array;
+        } else {
+            retObject[s] = value(s).toString();
+        }
     }
     return retObject;
 }
