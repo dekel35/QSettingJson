@@ -5,23 +5,32 @@
 #include "TestQSettingsJson.h"
 #include "QSettingsJson.h"
 
+std::string TestQSettingsJson::lastFuncName;
+
 TestQSettingsJson::TestQSettingsJson()
 {
-    array_.push_back(test_case1);
-    array_.push_back(test_case2);
-    array_.push_back(test_case3);
-    array_.push_back(test_case4);
+    array_.push_back(testBasic1);
+    array_.push_back(testBasic2);
+    array_.push_back(testGroups);
+    array_.push_back(testArray);
+    array_.push_back(testNested);
+    array_.push_back(testBool);
+    array_.push_back(testDouble);
+    array_.push_back(testNull);
 }
 
 void TestQSettingsJson::runTest()
 {
     int i = 0;
+    bool accum = true;
     for (auto f : array_) {
         auto ret = f();
-        std::cout << "========== test " << ++i
+        accum &= ret;
+        std::cout << "========== " << ++i << ". test " << TestQSettingsJson::lastFuncName 
                   << " result = " << (ret ? " GOOD " : " BAD ")
                   << "=======================" << std::endl;
     }
+    std::cout << (accum ? "" : "NOT ") << "all tests werc successful" << std::endl;
 }
 
 bool TestQSettingsJson::compareJson(QJsonObject *obj1, QJsonObject *obj2)
@@ -36,8 +45,9 @@ bool TestQSettingsJson::compareJson(QJsonObject *obj1, QJsonObject *obj2)
     return ret;
 }
 
-bool TestQSettingsJson::test_case1()
+bool TestQSettingsJson::testBasic1()
 {
+    lastFuncName = __func__;
     QSettingsJson set1;
     set1.clear();
 
@@ -52,8 +62,9 @@ bool TestQSettingsJson::test_case1()
     return true;
 }
 
-bool TestQSettingsJson::test_case2()
+bool TestQSettingsJson::testBasic2()
 {
+    lastFuncName = __func__;
     QSettingsJson settings;
     settings.clear();
     settings.setValue("g1/a", "b");
@@ -71,8 +82,9 @@ bool TestQSettingsJson::test_case2()
     return equal;
 }
 
-bool TestQSettingsJson::test_case3()
+bool TestQSettingsJson::testGroups()
 {
+    lastFuncName = __func__;
     QSettingsJson settings;
     settings.clear();
     settings.beginGroup("fridge");
@@ -88,24 +100,56 @@ bool TestQSettingsJson::test_case3()
     assert(importedSettings.allKeys().count() == settings.allKeys().count());
 
     auto jobj2 = importedSettings.exportJson();
-    QJsonDocument jdoc2(*jobj2);
     bool equal = compareJson(jobj, jobj2);
-    logger(INFO, "%s equal: %s\n", jdoc2.toJson().toStdString().c_str(),
-           (equal ? "true" : "false"));
     return equal;
 }
 
-bool TestQSettingsJson::test_case4()
+bool TestQSettingsJson::testArray()
 {
+    lastFuncName = __func__;
     QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key\" : [\"1\", \"2\"] }");
+    return testCommon(jdoc);
+}
+
+bool TestQSettingsJson::testNested()
+{
+    lastFuncName = __func__;
+    QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key1\" : { \"key2\": {\"key3\" : {\"key4\" : {\"key5\" : {\"key6\" : [\"1\", \"2\"] }}}}}}");
+    return testCommon(jdoc);
+}
+
+bool TestQSettingsJson::testBool()
+{
+    lastFuncName = __func__;
+    QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key1\" : true, \"key2\" : false}");
+    return testCommon(jdoc);
+}
+
+bool TestQSettingsJson::testDouble()
+{
+    lastFuncName = __func__;
+   QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key1\" : 1.1, \"key2\" : 2.2, \"key3\" : 42}");
+   return testCommon(jdoc);
+}
+
+bool TestQSettingsJson::testNull()
+{
+    lastFuncName = __func__;
+   QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key1\" : null, \"key2\" : \"something\"}");
+   return testCommon(jdoc);
+}
+
+bool TestQSettingsJson::testCommon(QJsonDocument jdoc)
+{
     QJsonObject jobj = jdoc.object();
     logger(INFO, jdoc.toJson().toStdString().c_str());
-    
+
     QSettingsJson importedSettings(&jobj);
     auto jobj2 = importedSettings.exportJson();
     QJsonDocument jdoc2(*jobj2);
+    logger(INFO, jdoc2.toJson().toStdString().c_str());
     bool equal = compareJson(&jobj, jobj2);
-    return equal; 
+    return equal;
 }
 
 void TestQSettingsJson::logger(LogLevel level, const char *format, ...)

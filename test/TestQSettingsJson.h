@@ -15,10 +15,16 @@ public:
     };
 
 private:
-    static bool test_case1();
-    static bool test_case2();
-    static bool test_case3();
-    static bool test_case4();
+    static bool testBasic1();
+    static bool testBasic2();
+    static bool testGroups();
+    static bool testArray();
+    static bool testNested();
+    static bool testBool();
+    static bool testDouble();
+    static bool testNull();
+
+    static bool testCommon(QJsonDocument jdoc);
 
     static bool compareJson(QJsonObject *obj1, QJsonObject *obj2);
     static void logger(LogLevel level, const char *format, ...);
@@ -26,6 +32,7 @@ private:
     typedef bool funcdef();
     std::vector<funcdef *> array_;
     LogLevel curLevel;
+    static std::string lastFuncName;
 };
 
 #endif // TESTQSETTINGJSON_H

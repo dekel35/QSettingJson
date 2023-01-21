@@ -53,21 +53,26 @@ void QSettingsJson::importSettingsFromJson(QJsonObject &jObject,
         }
         auto subIter = jObject.find(jkey);
         QString value;
-        if (subIter.value().isString()) {
+        auto val = subIter.value();
+        if (val.isString()) {
             retSettings->setValue(jkey, subIter.value().toString());
-        } else if (subIter.value().isBool()) {
+        } else if (val.isBool()) {
             retSettings->setValue(jkey, subIter.value().toBool());
-        } else if (subIter.value().isDouble()) {
+        } else if (val.isDouble()) {
             retSettings->setValue(jkey, subIter.value().toDouble());
-        } else if (subIter.value().isArray()) {
+        } else if (val.isNull()) {
+            retSettings->setValue(jkey, QVariant::fromValue(nullptr));
+        } else if (val.isArray()) {
             auto array = subIter.value().toArray();
             QList<QVariant> list;
             for (auto s : array) {
                 list.push_back(s.toString().toLatin1());
             }
             retSettings->setValue(jkey, list);
-        } else {
-            abort();
+        } else if (val.isObject()) {
+            abort(); // can't happen
+        } else { // catchall
+            retSettings->setValue(jkey, subIter.value().toString());
         }
     }
 }
@@ -92,6 +97,14 @@ QJsonObject QSettingsJson::exportOneKey(QString key, int depth)
                 array.push_back(item.toString().toStdString().c_str());
             }
             retObject[s] = array;
+        } else if (value(s).typeId() == QMetaType::Bool) {
+            retObject[s] = value(s).toBool();
+        } else if (value(s).typeId() == QMetaType::Int) {
+            retObject[s] = value(s).toInt();
+        } else if (value(s).typeId() == QMetaType::Double) {
+            retObject[s] = value(s).toDouble();
+        } else if (value(s).typeId() == QMetaType::Nullptr) {
+            retObject[s] = QJsonValue::Null;
         } else {
             retObject[s] = value(s).toString();
         }
