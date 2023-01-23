@@ -27,21 +27,15 @@ As a general rule QSettingJson should be used whenever QSettings is to be used, 
 
 # Note:
 
-QSetting and json are not 100% interchangable. QSettingsJson does what it can in order to bridge gaps, but it will never be able to do a perfect conversion for some types:
+QSetting and json are not 100% interchangable. QSettingsJson does what it can in order to bridge gaps.At the time of this writing, QSettings supports 82 different values which range not only from numbers, strings and arrays. but also types like colors, drawing pens, poligons, etc.
 
-consider, for example the following json:
+On the other hand the json specification cntains only 7 possible values:
+1. Number 
+2. String 
+3. Boolean 
+4. Array 
+5. Object 
+6. Whitespace
+7. Null
 
-```json
-{
-    "key" : ["1", "2"]
-}
-```
-The value ( ["1", "2"] ) is a json array. Something QSettings does not have a parallel for. In low-level terms it means that there is no parallel QVariant. Therefore for such json file, when converted to Settings, the array value ["1", "2'] will be transformed to the string "[1, 2]".
-
-transformint it back to json will produce the following file:
-```json
-{
-    "key" : "[1, 2]"
-}
-```
-Which is not what we would have liked, but that is because of the incompatibilities between the formats.
+Therefor converting QSetting with some exotic values to json may produce undesirable results.
