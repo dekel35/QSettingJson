@@ -70,7 +70,7 @@ bool TestQSettingsJson::testBasic1()
     QSettingsJson::clearMetadata();
     set1.setValue("a", "b");
     auto jobj = set1.exportJson();
-    QSettingsJson importedSettings(jobj);
+    QSettingsJson importedSettings(*jobj);
     delete jobj;
 
     assert(importedSettings.allKeys().count() == set1.allKeys().count());
@@ -88,7 +88,7 @@ bool TestQSettingsJson::testBasic2()
 
     auto jobj = settings.exportJson();
     //std::cout << __func__ << " " << QJsonDocument(*jobj).toJson().toStdString() << std::endl;
-    QSettingsJson importedSettings(jobj);
+    QSettingsJson importedSettings(*jobj);
 
     assert(importedSettings.allKeys().count() == settings.allKeys().count());
 
@@ -96,6 +96,7 @@ bool TestQSettingsJson::testBasic2()
     //std::cout << __func__ << " " << QJsonDocument(*jobj2).toJson().toStdString() << std::endl;
     QJsonDocument jdoc2(*jobj2);
     bool equal = compareJson(jobj, jobj2);
+    delete jobj, jobj2;
     return equal;
 }
 
@@ -112,12 +113,14 @@ bool TestQSettingsJson::testGroups()
     settings.setValue("tv", false);
 
     auto jobj = settings.exportJson();
-    QSettingsJson importedSettings(jobj);
+    QSettingsJson importedSettings(*jobj);
 
     assert(importedSettings.allKeys().count() == settings.allKeys().count());
 
     auto jobj2 = importedSettings.exportJson();
     bool equal = compareJson(jobj, jobj2);
+    delete jobj;
+    delete jobj2;
     return equal;
 }
 
@@ -253,16 +256,17 @@ bool TestQSettingsJson::testCommon(QJsonDocument &jdoc, QString key, JsonFuncPtr
     if (!key.isEmpty()) {
         QSettingsJson::addQMetaType(key, jsonFunc, variantFunc);
     }
-    QSettingsJson exportedSettings(&jobj);
-    auto jobj2 = exportedSettings.exportJson();
+    QSettingsJson exportedSettings(jobj);
+    QJsonObject *jobj2 = exportedSettings.exportJson();
     logger(DBG, QJsonDocument(*jobj2).toJson().data());
     bool equal = compareJson(&jobj, jobj2);
     if (equal) {
-        QSettingsJson settingsFromJson(jobj2);
+        QSettingsJson settingsFromJson(*jobj2);
         dumpSettings(exportedSettings);
         dumpSettings(settingsFromJson);
         equal = compareSettings(exportedSettings, settingsFromJson);
     }
+    delete jobj2;
     return equal;
 }
 

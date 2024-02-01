@@ -11,16 +11,16 @@ void dumpSettings(QSettings & settings, int depth = 0, int originDepth=0);
 
 std::map<QString, std::pair<JsonFuncPtr, VariantFuncPtr> > QSettingsJson::_extendedMap;
 
-QSettingsJson::QSettingsJson(QJsonObject *jObject)
+QSettingsJson::QSettingsJson(QJsonObject& jObject)
 {
     clear();
-    importSettingsFromJson(*jObject, *this, 0);
+    importSettingsFromJson(jObject, *this, 0);
 }
 
-QSettingsJson::QSettingsJson(QSettings *settings)
+QSettingsJson::QSettingsJson(QSettings& settings)
 {
-    for (auto key : settings->allKeys()) {
-        this->setValue(key, settings->value(key));
+    for (auto key : settings.allKeys()) {
+        this->setValue(key, settings.value(key));
     }
 }
 
@@ -194,10 +194,13 @@ QString QSettingsJson::handleQVariant(const QString &metaKey, QString &key1, QJs
    e.g., {"QMetatype-QColor" : "#00ff00" } into QColor("#00ff00") */
 QVariant QSettingsJson::convertMetadata(QString key, QJsonObject metaObject) {
 
+    if (metaObject.begin() == metaObject.end()) {
+        return QString("*error*");
+    }
     /* get the first (and only) key of the json object */
     auto metaKey = metaObject.begin().key();
 
-    /* get the first (and only) value of th json Object */
+    /* get the first (and only) value of the json Object */
     QJsonObject subObj = metaObject.begin().value().toObject();
 
 

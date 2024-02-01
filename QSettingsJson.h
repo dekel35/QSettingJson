@@ -47,8 +47,8 @@ public:
     }
 
     // Additional json-related contructors
-    QSettingsJson(QJsonObject *jobject);
-    QSettingsJson(QSettings *settings);
+    QSettingsJson(QJsonObject& jobject);
+    QSettingsJson(QSettings& settings);
 
     virtual ~QSettingsJson();
 
