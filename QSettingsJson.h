@@ -8,7 +8,6 @@
 #include <QJsonObject>
 
 class QSettingsJson;
-// typedef std::shared_ptr<QSettingsJson> SettingsPtr;
 typedef QString (*JsonFuncPtr)(const QVariant& value);
 typedef QVariant (*VariantFuncPtr) (const QJsonObject &jobj, QString value);
 
@@ -80,7 +79,7 @@ private:
     QVariant convertMetadata(QString key, QJsonObject subObj);
     bool isMeta(QString str);
 
-    static std::map<QString, std::pair<JsonFuncPtr, VariantFuncPtr> > _extendedMap;
+    static QMap<QString, QPair<JsonFuncPtr, VariantFuncPtr> > _extendedMap;
 };
 //TODO: check nulls, etc, especially in callbacks
 //TODO: casing etc.

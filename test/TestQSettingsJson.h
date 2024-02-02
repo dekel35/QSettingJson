@@ -5,8 +5,6 @@
 
 class QJsonObject;
 
-void dumpSettings(QSettings & settings, int depth = 0, int indent=0);
-
 class TestQSettingsJson {
 public:
     TestQSettingsJson();
@@ -35,15 +33,16 @@ private:
 
     static bool testCommon(QJsonDocument &jdoc, QString key = "", JsonFuncPtr func = nullptr, VariantFuncPtr = nullptr);
 
+    static void dumpSettings(QSettings& settings, int depth, int indet = 0);
     static bool compareSettings(QSettings& set1, QSettings& set2, int dept=0);
 
     static bool compareJson(QJsonObject *obj1, QJsonObject *obj2);
-    static void logger(LogLevel level, const char *format, ...);
+    static int logger(LogLevel level, const char *format, ...);
 
     typedef bool funcdef();
-    std::vector<funcdef *> array_;
+    QVector<funcdef *> array_;
     LogLevel curLevel;
-    static std::string lastFuncName;
+    static QString lastFuncName;
 };
 
 #endif // TESTQSETTINGJSON_H

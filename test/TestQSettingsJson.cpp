@@ -7,7 +7,7 @@
 #include "TestQSettingsJson.h"
 #include "QSettingsJson.h"
 
-std::string TestQSettingsJson::lastFuncName;
+QString TestQSettingsJson::lastFuncName;
 QString jobjectToStr(const QJsonObject& obj) {
     return QJsonDocument(obj).toJson();
 }
@@ -38,15 +38,15 @@ void TestQSettingsJson::runTest()
         auto ret = f();
         accum &= ret;
         if (ret == false) {
-            errList += QString(TestQSettingsJson::lastFuncName.c_str());
+            errList += lastFuncName;
         }
-        std::cout << "========== " << ++i << ". test " << TestQSettingsJson::lastFuncName
+        qDebug() << "========== " << ++i << ". test " << lastFuncName
                   << " result = " << (ret ? " GOOD " : " BAD ")
-                  << "=======================" << std::endl;
+                  << "=======================";
     }
-    std::cout << (accum ? "" : "NOT ") << "all tests were successful" << std::endl;
+    qDebug() << (accum ? "" : "NOT ") << "all tests were successful";
     for (auto e: errList) {
-        std::cout << "\t" << e.toStdString() << std::endl;
+        qDebug() << "\t" << e;
     }
 }
 
@@ -87,16 +87,15 @@ bool TestQSettingsJson::testBasic2()
     settings.setValue("g1/a", "b");
 
     auto jobj = settings.exportJson();
-    //std::cout << __func__ << " " << QJsonDocument(*jobj).toJson().toStdString() << std::endl;
     QSettingsJson importedSettings(*jobj);
 
     assert(importedSettings.allKeys().count() == settings.allKeys().count());
 
     auto jobj2 = importedSettings.exportJson();
-    //std::cout << __func__ << " " << QJsonDocument(*jobj2).toJson().toStdString() << std::endl;
     QJsonDocument jdoc2(*jobj2);
     bool equal = compareJson(jobj, jobj2);
-    delete jobj, jobj2;
+    delete jobj; 
+    delete jobj2;
     return equal;
 }
 
@@ -127,7 +126,7 @@ bool TestQSettingsJson::testGroups()
 bool TestQSettingsJson::testArray()
 {
     lastFuncName = __func__;
-    QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key\" : [\"1\", \"2\"] }");
+    QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key\" : [\"1\", \"2\", \"3\"] }");
     return testCommon(jdoc);
 }
 
@@ -177,7 +176,6 @@ bool TestQSettingsJson::testNull()
 QString MyQColorConvertor(const QVariant& value)
 {
     if (value.canConvert<QColor>()) {
-        QColor embeddedType = value.value<QColor>();
         QString ba (
             QString("\"") +
             value.toString() +
@@ -203,7 +201,7 @@ bool TestQSettingsJson::testQColor()
     set.clear();
     set.addQMetaType("QColor", MyQColorConvertor, MyQColorVariant);
     set.setValue("color", QColor(0, 255, 0));
-    dumpSettings(set);
+    // dumpSettings(set);
     auto jobj = set.exportJson();
     QJsonDocument jdoc(*jobj);
     return testCommon(jdoc, "QColor", MyQColorConvertor, MyQColorVariant);
@@ -240,7 +238,7 @@ bool TestQSettingsJson::testQLocale()
     set.clear();
     set.addQMetaType("QLocale", MyQLocalConvertor, MyQLocalVariant);
     set.setValue("locale", QLocale("el_CY"));
-    dumpSettings(set);
+    //dumpSettings(set);
     auto jobj = set.exportJson();
     QJsonDocument jdoc(*jobj);
 
@@ -262,28 +260,34 @@ bool TestQSettingsJson::testCommon(QJsonDocument &jdoc, QString key, JsonFuncPtr
     bool equal = compareJson(&jobj, jobj2);
     if (equal) {
         QSettingsJson settingsFromJson(*jobj2);
-        dumpSettings(exportedSettings);
-        dumpSettings(settingsFromJson);
+        // dumpSettings(exportedSettings);
+        // dumpSettings(settingsFromJson);
         equal = compareSettings(exportedSettings, settingsFromJson);
     }
     delete jobj2;
     return equal;
 }
 
-void dumpSettings(QSettings & settings, int depth, int originDepth) //TODO: enter into class
+void TestQSettingsJson::dumpSettings(QSettings& settings, int depth, int originDepth) //TODO: enter into class
 {
     for (auto s : settings.childGroups()) {
+        qDebug() << QString(depth*4, ' ') << originDepth <<  " --- group " << s << " ---";
         settings.beginGroup(s);
         dumpSettings(settings, depth+1, originDepth);
         settings.endGroup();
     }
     for (auto s : settings.childKeys()) {
+         qDebug() << QString(depth*4 , ' ') << originDepth << " Key:" << s << "(" << typeid(s).name() << ") " << " Value:" << settings.value(s).toString()  <<
+           " (" <<  settings.value(s).typeName() << ")";
          switch (settings.value(s).typeId()) {
             case QMetaType::QVariantList: {
                 for (auto item : settings.value(s).toList()) {
+                    qDebug() << QString(depth*4 , ' ') << originDepth << " item:" << item.toString() << " (" << typeid(item).name() << "," << item.typeId() << ") ";
+                        qDebug() << QString(depth*4 , ' ') << originDepth << "   -> " << item.typeName();
                         break;
             }
             case QMetaType::QLocale: {
+                qDebug() << QString(depth*4 , ' ') << originDepth << " item:" << settings.value(s).toLocale().name();
                 break;
             }
             default:
@@ -295,8 +299,10 @@ void dumpSettings(QSettings & settings, int depth, int originDepth) //TODO: ente
 
 bool TestQSettingsJson::compareSettings(QSettings& set1, QSettings& set2, int depth)
 {
-    auto s2i = set2.childGroups().begin();
-    for (auto s1 : set1.childGroups()) {
+    QStringList groupList1 = set1.childKeys();
+    QStringList groupList2 = set2.childKeys();
+    auto s2i = groupList2.begin();
+    for (auto s1 : groupList2) {
         auto s2 = *s2i;
         if (s1 != s2) {
             return false;
@@ -306,7 +312,7 @@ bool TestQSettingsJson::compareSettings(QSettings& set1, QSettings& set2, int de
         if (!compareSettings(set1, set2, depth+1)) {
             logger(WARN, "compare failure\n");
             dumpSettings(set1, depth);
-            dumpSettings(set1, depth);
+            dumpSettings(set2, depth);
             return false;
         }
         set2.endGroup();
@@ -316,13 +322,35 @@ bool TestQSettingsJson::compareSettings(QSettings& set1, QSettings& set2, int de
     if (set1.childKeys().count() != set2.childKeys().count()) {
         return false;
     }
-    auto s1ci = set1.childKeys().begin();
-    auto s2ci = set2.childKeys().begin();
-    while (s1ci != set1.childKeys().end()) {
+
+    auto childList1 = set1.childKeys();
+    auto childList2 = set2.childKeys();
+    auto s1ci = childList1.begin();
+    auto s2ci = childList2.begin();
+    while (s1ci != childList1.end()) {
         QString s1 = *s1ci;
         QString s2 = *s2ci;
         if (s1.compare(s2) != 0) {
             return false;
+        }
+        if (set1.value(s1).typeId() == QMetaType::QVariantList) {
+
+            auto array1 = set1.value(s1).toStringList();
+            auto array2 = set1.value(s2).toStringList();
+            if (array1.size() != array2.size()) {
+                return false;
+            }
+            for (auto i = 0; i < array1.size(); i++) {
+                if (array1[i].compare(array2[i]) != 0) {
+                    return false;
+                }
+            }
+        } else {
+            auto v1 = set1.value(s1).toString();
+            auto v2 = set2.value(s1).toString();
+            if (v1.compare(v2) != 0) {
+                return false;
+            }
         }
         s1ci++;
         s2ci++;
@@ -330,14 +358,15 @@ bool TestQSettingsJson::compareSettings(QSettings& set1, QSettings& set2, int de
     return true;
 }
 
-void TestQSettingsJson::logger(LogLevel level, const char *format, ...)
+int TestQSettingsJson::logger(LogLevel level, const char *format, ...)
 {
     if (level <= MSG) {
-        return;
+        return 0; 
     }
 
     va_list ap;
     va_start(ap, format);
     auto ret = ::vprintf(format, ap);
     va_end(ap);
+    return ret;
 }
