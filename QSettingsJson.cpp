@@ -5,9 +5,7 @@
 #include <utility>
 #include <QSettingsJson.h>
 
-#define COUT qDebug() << __func__ << ":" <<  __LINE__ << " "
-
-QMap<QString, QPair<JsonFuncPtr, VariantFuncPtr> > QSettingsJson::_extendedMap; //TODO: qmap
+QMap<QString, QPair<JsonFuncPtr, VariantFuncPtr> > QSettingsJson::_extendedMap;
 
 QSettingsJson::QSettingsJson(QJsonObject& jObject)
 {
@@ -69,23 +67,15 @@ void QSettingsJson::delAllQMetaType()
 void QSettingsJson::importSettingsFromJson(QJsonObject &jObject,
                                            QSettingsJson &retSettings, int depth)
 {
-    if (depth == 0) {
-        COUT "importing json  with " << jObject.keys().count() << " keys. currently we have " << allKeys().count() << " keys";
-    }
-    COUT <<" depth " << depth  << " current group '" << retSettings.group() << "' json:" << QJsonDocument(jObject).toJson().data();
     for (auto jkey : jObject.keys()) {
-        COUT << " depth " << depth << " current key:" << jkey;
         if (jObject[jkey].isObject()) {
             QJsonObject subObj = jObject[jkey].toObject();
-            if (jkey.startsWith("QMetatype")) { //TODO: never happens??
+            if (jkey.startsWith("QMetatype")) {
                 QVariant var = convertMetadata(jkey, subObj);
                 retSettings.setValue(jkey, var);
-                COUT << "depth " << depth << " added QString key " << jkey <<  " type of value: " << var.typeName() << " value:" << var.toString();
             } else {
                 retSettings.beginGroup(jkey);
-                COUT << " depth " << depth << " current group " << retSettings.group();
                 importSettingsFromJson(subObj, retSettings, depth+1);
-                COUT << " depth " << depth << " current group " << retSettings.group();
                 endGroup();
             }
             continue;
@@ -95,12 +85,9 @@ void QSettingsJson::importSettingsFromJson(QJsonObject &jObject,
         auto val = subIter.value();
 
         if (val.isString()) {
-            COUT << "string:" << jkey << ":" << val.toString();
-            COUT << " val:" << val.toString() << " type:" << val.toVariant().typeName();
             if (isMeta(val.toString())) {
                 QJsonParseError e;
                 QJsonObject metaObject = QJsonDocument::fromJson(val.toString().toLatin1(), &e).object();
-                COUT << e.errorString();
                 QVariant var = convertMetadata(jkey, metaObject);
                 retSettings.setValue(jkey, var);
             } else {
@@ -125,14 +112,12 @@ void QSettingsJson::importSettingsFromJson(QJsonObject &jObject,
             retSettings.setValue(jkey, val.toString());
         }
     }
-    COUT << " depth " << depth << " group " << retSettings.group();
     return;
 }
 
 QJsonObject QSettingsJson::exportOneKey(QString key, int depth)
 {
     QJsonObject retObject;
-    COUT << " entered with key='" << key << "' and depth=" << depth << " " << childGroups().count() << " groups";
 
     /* extract all groups recursively */
     auto groups = childGroups();
@@ -140,7 +125,6 @@ QJsonObject QSettingsJson::exportOneKey(QString key, int depth)
         beginGroup(s);
         auto prefix = key.length() == 0 ? "" : key + "/";
         auto varObject = exportOneKey(s, depth + 1);
-        COUT << " depth=" << depth << " returned object " << QJsonDocument(varObject).toJson().data();
         retObject[s] = varObject;
         endGroup();
     }
@@ -148,8 +132,6 @@ QJsonObject QSettingsJson::exportOneKey(QString key, int depth)
     /* now handle the key-value setting objects */
     auto keys = childKeys();
     for (auto s : childKeys()) {
-        COUT << ":" << " depth "<< depth << " s type " << typeid(s).name() << " " << s << ":" << value(s).toString() << " type of value: " << typeid(value(s)).name();
-        COUT << " TYPEiD "<< value(s).typeId();
         switch(value(s).typeId()) {
         case  QMetaType::QVariantList: {
             QJsonArray array;
@@ -175,14 +157,10 @@ QJsonObject QSettingsJson::exportOneKey(QString key, int depth)
            so, we call handleQVariant which will look for a callback convertor (if one was defined) */
         default:
             QString subObject = handleQVariant(s, key, retObject);
-            COUT <<  " group " << group();
-            COUT << " s=" << s << " depth " << depth << subObject;
-            retObject[s] = subObject;//QJsonDocument::fromJson(inner.toString().toLatin1().data()).object();
-            COUT <<  " depth " << depth << QJsonDocument(retObject).toJson().data();
+            retObject[s] = subObject;
             break;
         }
     }
-    COUT << " returning from depth " << depth << QJsonDocument(retObject).toJson().data();
     return retObject;
 }
 
@@ -199,16 +177,12 @@ QString QSettingsJson::handleQVariant(const QString &metaKey, QString &key1, QJs
     QString retObject{};
     const QVariant &variant = value(metaKey);
     QString typeName = variant.metaType().name();
-    COUT << " metaKey:" <<metaKey << " typess:" << typeName;
      if (_extendedMap[typeName].first != nullptr) {
             auto jobj1 = _extendedMap[typeName].first(variant);
             retObject = QString("{ \"QMetatype-") + typeName +  "\" :" + jobj1 + "}" ;
-            COUT << " compJobj " << retObject;
             return retObject;
     }
     else { /* no callback defined, do the best we can */
-        COUT << " key " << typeName << " not found! list follows:";
-
         retObject = variant.toString();
     }
     return retObject;
@@ -222,7 +196,6 @@ QVariant QSettingsJson::convertMetadata(QString key, QJsonObject metaObject) {
         return QString("*error*");
     }
     /* get the first (and only) key of the json object */
-    COUT << QJsonDocument(metaObject).toJson().data();
     auto metaKey = metaObject.begin().key();
 
     /* get the first (and only) value of the json Object */
@@ -247,7 +220,6 @@ QVariant QSettingsJson::convertMetadata(QString key, QJsonObject metaObject) {
     }
 
     /* locate function reference and call it, if found  */
-    COUT << value;
     QMap<QString, QPair<JsonFuncPtr, VariantFuncPtr> >::iterator qp = QSettingsJson::_extendedMap.find(metaKey);
     if (qp != QSettingsJson::_extendedMap.end() && &qp.value() != nullptr) {
             return qp.value().second(subObj, value);
