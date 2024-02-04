@@ -43,7 +43,7 @@ On the other hand the json specification contains only 7 possible values:
 Therefore converting QSetting into json requires the Qt type to be preserved, for a later restoration. 
 QSettingsJson can generate a json construct that preserves such types. 
 
-for axample QColor("#00ff00") can be converted to a json element like this:
+for example QColor("#00ff00") can be converted to a json element like this:
 ```lang=json
 { "Qmetetype-QColor" : "00ff00" }
 ```
