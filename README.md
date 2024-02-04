@@ -12,7 +12,7 @@ The QSettingsJson class inherits from Qt's QSetting class and adds the following
     ```lang c++
     QSettingJson setting(QJsonObject& jobject);
     ```
-2. A **contructor** that construct QSettingsJson from a QSettings object:
+2. A **constructor** that construct QSettingsJson from a QSettings object:
     ```lang cpp
     QSettingsJson(QSettings& settings);
     ```
@@ -29,7 +29,7 @@ As a general rule QSettingJson can be used whenever QSettings is to be used, but
 
 # A note about compatibility between json and QSettings
 
-QSetting and json are not fully interchangable. QSettingsJson does what it can in order to bridge some of the gaps. At the time of this writing, QSettings supports 82 different values which range not only from numbers, strings and arrays. but also types like colors, drawing pens, poligons, etc.
+QSetting and json are not fully interchangeable. QSettingsJson does what it can in order to bridge some of the gaps. At the time of this writing, QSettings supports 82 different values which range not only from numbers, strings and arrays. but also types like colors, drawing pens, polygons, etc.
 
 On the other hand the json specification contains only 7 possible values:
 1. Number 
@@ -47,7 +47,7 @@ for example QColor("#00ff00") can be converted to a json element like this:
 ```lang=json
 { "Qmetetype-QColor" : "00ff00" }
 ```
-In order to achieve such convertion a callback function must be created. Here is an sample callback function for the QColor type. The function receives a setting [QVariant](https://doc.qt.io/qt-6/qvariant.html) which it shoud convert into a json-compatible value:
+In order to achieve such conversion a callback function must be created. Here is an sample callback function for the QColor type. The function receives a setting [QVariant](https://doc.qt.io/qt-6/qvariant.html) which it should convert into a json-compatible value:
 ```lang=c++
 String MyQColorConvertor(const QVariant& value)
 {
@@ -96,7 +96,7 @@ Note that even so, there are still styiling variations that should be considered
 
 and they both represent the same QColor value. So, it's up to the writers of the callback functions to decide how they wish to handle this. 
 
-The testQsettingJson.cpp file contains 2 samples that demonnstrate possible QColor and QLocale implementations.
+The testQsettingJson.cpp file contains 2 samples that demonstrate possible QColor and QLocale implementations.
 
 the QColor test does the following:
 1. Creates an empty set:
@@ -115,4 +115,6 @@ set.setValue("color", QColor(0, 255, 0));
 ```
 After this any conversion back and forth will call **MyQColorConvertor** and **MyQColorVariant** for doing a correct conversion.
 
-testQLocale fucntion in that file contains similar example for QLocal manipulation.
+testQLocale function in that file contains similar example for QLocal manipulation.
+
+Feb, 2024
