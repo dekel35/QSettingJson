@@ -5,7 +5,6 @@
 #include <utility>
 #include <QSettingsJson.h>
 
-void dumpSettings(QSettings & settings, int depth = 0, int originDepth=0);
 #define COUT qDebug() << __func__ << ":" <<  __LINE__ << " "
 
 QMap<QString, QPair<JsonFuncPtr, VariantFuncPtr> > QSettingsJson::_extendedMap; //TODO: qmap
@@ -127,7 +126,6 @@ void QSettingsJson::importSettingsFromJson(QJsonObject &jObject,
         }
     }
     COUT << " depth " << depth << " group " << retSettings.group();
-    // dumpSettings(retSettings, 0, depth);
     return;
 }
 

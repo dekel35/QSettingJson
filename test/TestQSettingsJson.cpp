@@ -50,21 +50,12 @@ void TestQSettingsJson::runTest()
     }
 }
 
-bool TestQSettingsJson::compareJson(QJsonObject *obj1, QJsonObject *obj2)
-{
-    QJsonDocument doc1(*obj1);
-    QJsonDocument doc2(*obj2);
-    logger(MSG, "compare 1\n%s\n", doc1.toJson().toStdString().c_str());
-    logger(MSG, "compare 2\n%s\n", doc2.toJson().toStdString().c_str());
-    auto r = doc1.toJson(QJsonDocument::Compact)
-                 .compare(doc2.toJson(QJsonDocument::Compact));
-    bool ret = (r == 0);
-    return ret;
-}
+#define DEFTEST(name)  bool TestQSettingsJson::name() { \
+    lastFuncName = __func__ ; \
 
-bool TestQSettingsJson::testBasic1()
-{
-    lastFuncName = __func__;
+#define ENDTEST }
+
+DEFTEST(testBasic1)
     QSettingsJson set1;
     set1.clear();
     QSettingsJson::clearMetadata();
@@ -76,11 +67,9 @@ bool TestQSettingsJson::testBasic1()
     assert(importedSettings.allKeys().count() == set1.allKeys().count());
     assert(importedSettings.value("a") == set1.value("a"));
     return true;
-}
+ENDTEST
 
-bool TestQSettingsJson::testBasic2()
-{
-    lastFuncName = __func__;
+DEFTEST(testBasic2)
     QSettingsJson settings;
     settings.clear();
     QSettingsJson::clearMetadata();
@@ -97,11 +86,9 @@ bool TestQSettingsJson::testBasic2()
     delete jobj; 
     delete jobj2;
     return equal;
-}
+ENDTEST
 
-bool TestQSettingsJson::testGroups()
-{
-    lastFuncName = __func__;
+DEFTEST(testGroups)
     QSettingsJson settings;
     settings.clear();
     settings.beginGroup("fridge");
@@ -121,56 +108,42 @@ bool TestQSettingsJson::testGroups()
     delete jobj;
     delete jobj2;
     return equal;
-}
+ENDTEST
 
-bool TestQSettingsJson::testArray()
-{
-    lastFuncName = __func__;
+DEFTEST(testArray)
     QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key\" : [\"1\", \"2\", \"3\"] }");
     return testCommon(jdoc);
-}
+ENDTEST
 
-bool TestQSettingsJson::testNestedSmall()
-{
-    lastFuncName = __func__;
+DEFTEST(testNestedSmall)
     QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key1\" : { \"key2\": { \"key3\":  [\"1\", \"2\"] }}}");
     return testCommon(jdoc);
-}
+ENDTEST
 
-bool TestQSettingsJson::testNested()
-{
-    lastFuncName = __func__;
+DEFTEST(testNested)
     QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key1\" : { \"key2\": {\"key3\" : {\"key4\" : {\"key5\" : {\"key6\" : [\"1\", \"2\"] }}}}}}");
     return testCommon(jdoc);
-}
+ENDTEST
 
-bool TestQSettingsJson::test2Nested()
-{
-    lastFuncName = __func__;
+DEFTEST(test2Nested)
     QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key1\" : { \"key11\": \"11\" } , \"key2\" : { \"key22\": \"22\" } }");
     return testCommon(jdoc);
-}
+ENDTEST
 
-bool TestQSettingsJson::testBool()
-{
-    lastFuncName = __func__;
+DEFTEST(testBool)
     QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key1\" : true, \"key2\" : false}");
     return testCommon(jdoc);
-}
+ENDTEST
 
-bool TestQSettingsJson::testDouble()
-{
-    lastFuncName = __func__;
+DEFTEST(testDouble)
    QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key1\" : 1.1, \"key2\" : 2.2, \"key3\" : 42}");
    return testCommon(jdoc);
-}
+ENDTEST
 
-bool TestQSettingsJson::testNull()
-{
-    lastFuncName = __func__;
+DEFTEST(testNull)
    QJsonDocument jdoc = QJsonDocument::fromJson("{ \"key1\" : null, \"key2\" : \"something\"}");
    return testCommon(jdoc);
-}
+ENDTEST
 
 //This callback function is used by the next test to correctly convert QColor to a json string (see testQColor())
 QString MyQColorConvertor(const QVariant& value)
@@ -193,9 +166,7 @@ QVariant MyQColorVariant(const QJsonObject &color, QString value)
     return QVariant(qcol1);
 }
 
-bool TestQSettingsJson::testQColor()
-{
-    lastFuncName = __func__;
+DEFTEST(testQColor)
     QSettingsJson::clearMetadata();
     QSettingsJson set;
     set.clear();
@@ -205,7 +176,7 @@ bool TestQSettingsJson::testQColor()
     auto jobj = set.exportJson();
     QJsonDocument jdoc(*jobj);
     return testCommon(jdoc, "QColor", MyQColorConvertor, MyQColorVariant);
-}
+ENDTEST
 
 //This function will be used by the next test to correctly convert QLocale to a json string (see testQLocale())
 QString MyQLocalConvertor(const QVariant& value)
@@ -230,9 +201,7 @@ QVariant MyQLocalVariant(const QJsonObject& locale, QString value)
 }
 
 
-bool TestQSettingsJson::testQLocale()
-{
-    lastFuncName = __func__;
+DEFTEST(testQLocale)
     QSettingsJson set;
     QSettingsJson::clearMetadata();
     set.clear();
@@ -243,7 +212,7 @@ bool TestQSettingsJson::testQLocale()
     QJsonDocument jdoc(*jobj);
 
     return testCommon(jdoc, "QLocale", MyQLocalConvertor, MyQLocalVariant);
-}
+ENDTEST
 
 bool TestQSettingsJson::testCommon(QJsonDocument &jdoc, QString key, JsonFuncPtr jsonFunc, VariantFuncPtr variantFunc)
 {
@@ -295,6 +264,18 @@ void TestQSettingsJson::dumpSettings(QSettings& settings, int depth, int originD
             }
         }
     }
+}
+
+bool TestQSettingsJson::compareJson(QJsonObject *obj1, QJsonObject *obj2)
+{
+    QJsonDocument doc1(*obj1);
+    QJsonDocument doc2(*obj2);
+    logger(MSG, "compare 1\n%s\n", doc1.toJson().toStdString().c_str());
+    logger(MSG, "compare 2\n%s\n", doc2.toJson().toStdString().c_str());
+    auto r = doc1.toJson(QJsonDocument::Compact)
+                 .compare(doc2.toJson(QJsonDocument::Compact));
+    bool ret = (r == 0);
+    return ret;
 }
 
 bool TestQSettingsJson::compareSettings(QSettings& set1, QSettings& set2, int depth)
